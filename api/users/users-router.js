@@ -2,6 +2,19 @@ const router = require("express").Router();
 const Users = require("./users-model.js");
 const { restricted, only } = require("../auth/auth-middleware.js");
 
+
+
+// router.get("/", restricted, (req, res, next) => { // done for you
+//   Users.getAll()
+//     .then(users => {
+//       res.status(200).json(users);
+//     })
+//     .catch(next);
+// });
+
+
+
+
 /**
   [GET] /api/users
 
@@ -24,6 +37,25 @@ router.get("/", restricted, (req, res, next) => { // done for you
     })
     .catch(next);
 });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /**
   [GET] /api/users/:user_id
