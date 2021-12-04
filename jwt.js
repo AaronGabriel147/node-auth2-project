@@ -5,7 +5,7 @@ const bcrypt = require('bcrypt');
 
 
 
-Router.post('/login', (req, res) => {
+Router.post('/login', (req, res,) => {
     let { username, password } = req.body;
 
     Users.findBy({ username })
@@ -44,4 +44,6 @@ function generateToken(user) {
 
     return jwt.sign(payload, secrets.jwtSecret, options); // will get tho this with video.
 }
+
+
 

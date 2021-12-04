@@ -33,7 +33,7 @@ module.exports = {
       }
     ]
     */
-function find() {
+function find() {              // grabbing 2 tables and putting them together to return
   return db('users')
     .join('roles', "users.role_id", 'roles.role_id')
     .select('user_id', 'username', 'role_name')
@@ -48,7 +48,7 @@ function find() {
   from users
   join roles on
     users.role_id = roles.role_id
-  where users.username = 1
+  where users.username = 1 AKA filter arg as seen below****
 */
 /**
  You will need to join two tables.
@@ -63,6 +63,7 @@ function find() {
     }
   ]
   */
+// This simply finds by an ID
 function findBy(filter) { // nobody is using this, yet...
   return db('users')
     .join('roles', "users.role_id", 'roles.role_id')
@@ -94,14 +95,14 @@ function findById(user_id) {
 
 /**
   Creating a user requires a single insert (into users) if the role record with the given
-  role_name already exists in the db, or two inserts (into roles and then into users)
-  if the given role_name does not exist yet.
+  role_name already exists in the db, or two inserts (into roles and then into users)        ???????????
+  if the given role_name does not exist yet.                                                 ???????????
 
   When an operation like creating a user involves inserts to several tables,
   we want the operation to succeed or fail as a whole. It would not do to
   insert a new role record and then have the insertion of the user fail.
 
-  In situations like these we use transactions: if anything inside the transaction
+  In situations like these we use transactions: if anything inside the transaction      ****** Transactions *****
   fails, all the database changes in it are rolled back.
 
   {
@@ -110,27 +111,29 @@ function findById(user_id) {
     "role_name": "team lead"
   }
  */
-async function add({ username, password, role_name }) { // done for you
-  let created_user_id
-  await db.transaction(async trx => {
-    let role_id_to_use
-    const [role] = await trx('roles').where('role_name', role_name)
-    if (role) {
-      role_id_to_use = role.role_id
-    } else {
-      const [role_id] = await trx('roles').insert({ role_name: role_name })
-      role_id_to_use = role_id
+// do not get the pre-written code. ?
+async function add({ username, password, role_name }) {             // async function to add a user
+  let created_user_id                                               // Same as: let created_user_id = undefined;
+
+  await db.transaction(async trx => {                               // start a transaction
+    let role_id_to_use                                              // Same as: let role_id_to_use = undefined;
+    const [role] = await trx('roles').where('role_name', role_name) // find the role_id for the given role_name
+    if (role) {                                                     // if the role exists
+      role_id_to_use = role.role_id                                 // use the role_id
+    } else {                                                        // if the role does not exist
+      const [role_id] = await trx('roles').insert({ role_name: role_name }) // create a new role with the given role_name
+      role_id_to_use = role_id                                      // use the role_id
     }
-    const [user_id] = await trx('users').insert({ username, password, role_id: role_id_to_use })
-    created_user_id = user_id
+    const [user_id] = await trx('users').insert({ username, password, role_id: role_id_to_use }) // create a new user with the given username, password, and role_id
+    created_user_id = user_id                                       // save the user_id
   })
-  return findById(created_user_id)
+  return findById(created_user_id)                                  // return the user with the given user_id
 }
 
 
 
 
-// #############################################################################
+// ################################################
 
 
 // TODOLIST for module 2
