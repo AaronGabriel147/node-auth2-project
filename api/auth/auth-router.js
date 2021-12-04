@@ -1,9 +1,10 @@
 const router = require("express").Router();
 const { checkUsernameExists, validateRoleName } = require('./auth-middleware');
 const User = require('../users/users-model')
+
 const bcrypt = require('bcryptjs');
+const secrets = require("../secrets/index"); // use this secret!
 const jwt = require('jsonwebtoken') // npm install
-const { JWT_SECRET } = require("../secrets"); // use this secret!
 
 
 /**
@@ -23,9 +24,9 @@ const { JWT_SECRET } = require("../secrets"); // use this secret!
 //   // never save the plain text password in the db
 //   user.password = hash
 
-router.post("/register", validateRoleName, async (req, res) => {
+router.post("/register", validateRoleName, checkUsernameExists, async (req, res) => {
 
-  // const { username, password, role_name } = req.body;         // Destructure whatever the user types
+  // const { username, password, role_name } = req.body;    // Destructure whatever the user types
 
   const { username, password, role_name } = req.body;       // Take whatever the user types
   const hash = bcrypt.hashSync(password, 8);                // Hashes the user's password
@@ -42,7 +43,7 @@ router.post("/register", validateRoleName, async (req, res) => {
   }
 })
 
-
+// __________________________________________________________________________
 
 
 
@@ -65,18 +66,22 @@ router.post("/register", validateRoleName, async (req, res) => {
     "role_name": "admin" // the role of the authenticated user
   }
   */
-// router.post("/login", checkUsernameExists, (req, res, next) => {
-// });
 
 
-router.post('/login', checkUsernameExists, async (req, res, next) => {
+
+
+router.post('/login', async (req, res, next) => {
   const { username, password } = req.body;
 
   try {
-    const [user] = await User.findBy({ username })             // This is the user from the database.
-    if (user && bcrypt.compareSync(password, user.password)) { // bcrypt line is testing the hashed pw
+    const [user] = await User.findBy({ username })
+
+    console.log('password req.body --->', password, 'user.password from DB --->', user.password)
+
+    if (user && bcrypt.compareSync(password, user.password)) {
+
       const token = generateToken(user)
-      return res.json({ message: `You are logged in ${user.username}, have a token!`, token })
+      return res.status(200).json({ message: `You are logged in ${user.username}, have a token!`, token })
     }
     next({ status: 401, message: 'Invalid Credentials from login' });
   } catch (err) {
@@ -85,21 +90,24 @@ router.post('/login', checkUsernameExists, async (req, res, next) => {
 });
 
 
-
 function generateToken(user) {
   const payload = {
     subject: user.id,
     username: user.username,
-    role: user.role,
+    role: user.role_id,
   }
   const options = {
     expiresIn: '1d',
   }
-  return jwt.sign(payload, JWT_SECRET, options)
+  const secret = secrets.jwtSecret;
+
+  return jwt.sign(payload, secret, options)
 }
 
 
 module.exports = router;
+
+
 
 // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 

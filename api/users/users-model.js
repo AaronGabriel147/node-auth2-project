@@ -36,7 +36,7 @@ module.exports = {
 function find() {              // grabbing 2 tables and putting them together to return
   return db('users')
     .join('roles', "users.role_id", 'roles.role_id')
-    .select('user_id', 'username', 'role_name')
+    .select('user_id', 'username', 'role_name', 'password')
 
 }
 
