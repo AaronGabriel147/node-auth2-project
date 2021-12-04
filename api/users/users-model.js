@@ -7,33 +7,15 @@ module.exports = {
   findById,
 };
 
-
-
-// // Router
-// router.get("/", (req, res) => {
-//   Users.getAll()
-//     .then(users => {
-//       res.status(200).json(users)
-//     })
-// })
-
-// // Model
-// function getAll() {
-// console.log('getAll')
-// return db('users')
-// }
-
-
-// function getAll() {
-//   return db('users')
-//   .join('roles', "users.role_id", 'roles.role_id')
-//   .select('user_id', 'username', 'role_name')
-// }
-
-
-
-
-
+/*
+  select
+    user_id,
+    username,
+    role_name
+  from users
+    join roles on
+  users.role_id = roles.role_id
+*/
 /**
  You will need to join two tables.
  Resolves to an ARRAY with all users.
@@ -58,56 +40,57 @@ function find() {
 
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-function findBy(filter) {
-  /**
-    You will need to join two tables.
-    Resolves to an ARRAY with all users that match the filter condition.
-
-    [
-      {
-        "user_id": 1,
-        "username": "bob",
-        "password": "$2a$10$dFwWjD8hi8K2I9/Y65MWi.WU0qn9eAVaiBoRSShTvuJVGw8XpsCiq",
-        "role_name": "admin",
-      }
-    ]
-   */
-}
-
-
-
-function findById(user_id) {
-  /**
-    You will need to join two tables.
-    Resolves to the user with the given user_id.
-
-    {
-      "user_id": 2,
-      "username": "sue",
-      "role_name": "instructor"
+/*
+  select
+    user_id,
+    username,
+    role_name
+  from users
+  join roles on
+    users.role_id = roles.role_id
+  where users.username = 1
+*/
+/**
+ You will need to join two tables.
+ Resolves to an ARRAY with all users that match the filter condition.
+ 
+ [
+   {
+     "user_id": 1,
+     "username": "bob",
+     "password": "$2a$10$dFwWjD8hi8K2I9/Y65MWi.WU0qn9eAVaiBoRSShTvuJVGw8XpsCiq",
+     "role_name": "admin",
     }
-   */
+  ]
+  */
+function findBy(filter) { // nobody is using this, yet...
+  return db('users')
+    .join('roles', "users.role_id", 'roles.role_id')
+    .select('user_id', 'username', 'password', 'role_name')
+    .where(filter)
 }
+
+
+
+/**
+ You will need to join two tables.
+ Resolves to the user with the given user_id.
+ 
+ {
+   "user_id": 2,
+   "username": "sue",
+   "role_name": "instructor"
+  }
+  */
+function findById(user_id) {
+  return db('users')
+    .join('roles', "users.role_id", 'roles.role_id')
+    .select('user_id', 'username', 'password', 'role_name')
+    .where('users.user_id', user_id).first()
+}
+
+
+
 
 /**
   Creating a user requires a single insert (into users) if the role record with the given
