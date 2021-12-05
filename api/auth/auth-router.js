@@ -3,7 +3,7 @@ const { checkUsernameExists, validateRoleName } = require('./auth-middleware');
 const User = require('../users/users-model')
 
 const bcrypt = require('bcryptjs');
-const secrets = require("../secrets/index"); // use this secret!
+const { JWT_SECRET } = require("../secrets/index"); // use this secret!
 const jwt = require('jsonwebtoken') // npm install
 
 
@@ -70,39 +70,77 @@ router.post("/register", validateRoleName, checkUsernameExists, async (req, res)
 
 
 
-router.post('/login', async (req, res, next) => {
-  const { username, password } = req.body;
+// router.post('/login', checkUsernameExists, async (req, res, next) => {
+//   const { username, password } = req.body;
+//   // const dbUser = req.user;
+//   // console.log('dbUser', dbUser)
 
-  try {
-    const [user] = await User.findBy({ username })
+//   console.log('dfsgdgdfgd', req.headers.authorization)
 
-    console.log('password req.body --->', password, 'user.password from DB --->', user.password)
+//   try {
+//     const [user] = await User.findBy({ username })
+//     // console.log('user ---> ', user)
+//     // console.log('req.body.password ---> ', password, 'user.password from DB --->', user.password)
 
-    if (user && bcrypt.compareSync(password, user.password)) {
+//     if (user && bcrypt.compareSync(password, user.password)) {
+//       // console.log('if user ---> ', user)
 
-      const token = generateToken(user)
-      return res.status(200).json({ message: `You are logged in ${user.username}, have a token!`, token })
+//       const token = generateToken(user)   // STALLING HERE, NOT FIRING IN CONSOLE! ##############
+//       console.log('token ---> ', token)
+
+//       return res.status(200).json({ message: `${user.username} is back! Have a token!`, token })
+//     }
+//     next({ status: 401, message: 'Invalid Credentials from login' });
+//   } catch (err) {
+//     // res.status(500).json({ message: 'Server side error while logging in user', err: err.message });
+//     next({ status: 500, message: 'Server side error while logging in user', err: err.message });
+//   }
+// });
+
+
+router.post("/login", checkUsernameExists, (req, res, next) => {
+  if (bcrypt.compareSync(req.body.password, req.user.password)) {
+    const token = buildToken(req.user)
+    res.json({
+      message: `${req.user.username} is back!`,
+      token
+    })
+  } else {
+    next({
+      status: 401,
+      message: "Invalid credentials"
+    })
+  }
+
+  function buildToken(user) {
+    const payload = {
+      subject: user.user_id,
+      role_name: user.role_name,
+      username: user.username,
     }
-    next({ status: 401, message: 'Invalid Credentials from login' });
-  } catch (err) {
-    res.status(500).json({ message: 'Server side error while logging in user', err });
+    const options = {
+      expiresIn: '1d',
+    }
+    return jwt.sign(payload, JWT_SECRET, options)
   }
 });
 
 
-function generateToken(user) {
-  const payload = {
-    subject: user.id,
-    username: user.username,
-    role: user.role_id,
-  }
-  const options = {
-    expiresIn: '1d',
-  }
-  const secret = secrets.jwtSecret;
 
-  return jwt.sign(payload, secret, options)
-}
+
+// function generateToken(user) {
+//   const payload = {
+//     subject: user.id,
+//     username: user.username,
+//     role: user.role,
+//   }
+//   const options = {
+//     expiresIn: '99d',
+//   }
+//   const secret = secrets.jwtSecret;
+
+//   return jwt.sign(payload, secret, options)
+// }
 
 
 module.exports = router;
@@ -110,8 +148,6 @@ module.exports = router;
 
 
 // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-
-
 
 
 
